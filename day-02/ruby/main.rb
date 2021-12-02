@@ -1,5 +1,5 @@
 def file(path)
-  File.read(File.join(File.dirname(__FILE__), path))
+  File.read(File.join(__dir__, path))
 end
 
 def parse(data)
@@ -11,8 +11,7 @@ def parse(data)
 end
 
 EXAMPLE = parse file "example"
-INPUT1 = parse file "input1"
-INPUT2 = parse file "input2"
+INPUT = parse file "input"
 
 PART1 = {
   up: ->(d) { [0, -d] },
@@ -41,7 +40,7 @@ end
 
 puts "*" * 80
 puts "Example 1: #{part1 EXAMPLE}"
-puts "Part 1: #{part1 INPUT1}"
+puts "Part 1: #{part1 INPUT}"
 puts "*" * 80
 puts "Example 2: #{part2 EXAMPLE}"
-puts "Part 2: #{part2 INPUT2}"
+puts "Part 2: #{part2 INPUT}"
