@@ -3,7 +3,9 @@ def file(path)
 end
 
 def parse(data)
-  data.split("\n").map { |com| com.split(" ") }
+  data.split("\n").map do |com|
+    com.split(" ").yield_self { |op, dist| [op, dist.to_i] }
+  end
 end
 
 EXAMPLE = parse file "example"
@@ -11,43 +13,41 @@ INPUT1 = parse file "input1"
 INPUT2 = parse file "input2"
 
 def part1(data)
-  x = 0
-  y = 0
+  horiz = 0
+  depth = 0
 
-  data.each do |com, dist|
-    idist = dist.to_i
-    case com
-    when "forward"
-      x += idist
+  data.each do |op, dist|
+    case dist
+    when "down"
+      depth += dist
     when "up"
-      y -= idist
+      depth -= dist
     else
-      y += idist
+      horiz += dist
     end
   end
 
-  x * y
+  horiz * depth
 end
 
 def part2(data)
-  x = 0
-  y = 0
-  a = 0
+  horiz = 0
+  depth = 0
+  aim = 0
 
-  data.each do |com, dist|
-    idist = dist.to_i
-    case com
-    when "forward"
-      x += idist
-      y += a * idist
+  data.each do |op, dist|
+    case op
+    when "down"
+      aim += dist
     when "up"
-      a -= idist
+      aim -= dist
     else
-      a += idist
+      horiz += dist
+      depth += aim * dist
     end
   end
 
-  x * y
+  horiz * depth
 end
 
 puts "*" * 80
