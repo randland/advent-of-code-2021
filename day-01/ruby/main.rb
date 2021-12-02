@@ -1,4 +1,4 @@
-def file(path) File.read(File.join(__dir__, path)); end
+def file(path) = File.read(File.join(__dir__, path))
 
 def parse(data) = data.split("\s").map(&:to_i)
 def count_inc(data, res) = (res...data.size).count { |i| data[i] > data[i - res] }

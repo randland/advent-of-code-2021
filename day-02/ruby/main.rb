@@ -1,11 +1,9 @@
-def file(path)
-  File.read(File.join(__dir__, path))
-end
+def file(path) = File.read(File.join(__dir__, path))
 
 def parse(data)
   data.split("\n").map do |com|
     com.split(" ").yield_self do |op, dist|
-      [op.to_sym, dist.to_i]
+      [op, dist.to_i]
     end
   end
 end
@@ -14,11 +12,10 @@ class Sub1
   def initialize(commands)
     @horiz = 0
     @depth = 0
-    @commands = commands
-    run
+    run(commands)
   end
 
-  def run = @commands.each { |op, dist| send(op, dist) }
+  def run(commands) = commands.each { |op, dist| send(op, dist) }
   def loc = @horiz * @depth
 
   def down(x) = @depth += x
@@ -27,7 +24,7 @@ class Sub1
 end
 
 class Sub2 < Sub1
-  def initialize(data)
+  def initialize(commands)
     @aim = 0
     super
   end
