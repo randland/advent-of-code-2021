@@ -10,37 +10,70 @@ def parse(data)
   end
 end
 
-EXAMPLE = parse file "example"
-INPUT = parse file "input"
+class Sub1
+  def initialize
+    @horiz = 0
+    @depth = 0
+  end
 
-PART1 = {
-  up: ->(d) { [0, -d] },
-  down: ->(d) { [0, d] },
-  forward: ->(d) { [d, 0] }
-}.freeze
+  def forward(x)
+    @horiz += x
+  end
 
-PART2 = {
-  up: ->(d) { @a -= d; [0, 0] },
-  down: ->(d) { @a += d; [0, 0] },
-  forward: ->(d) { [d, @a * d] }
-}.freeze
+  def down(x)
+    @depth += x
+  end
+
+  def up(x)
+    down(-x)
+  end
+
+  def loc
+    @horiz * @depth
+  end
+end
+
+class Sub2 < Sub1
+  def initialize
+    super
+    @aim = 0
+  end
+
+  def forward(x)
+    @horiz += x
+    @depth += @aim * x
+  end
+
+  def down(x)
+    @aim += x
+  end
+end
 
 def part1(data)
-  data.inject([0,0]) do |mem, (op, dist)|
-    mem.zip(PART1[op].call(dist)).map(&:sum)
-  end.inject(:*)
+  Sub1.new.tap { |sub| data.each { |op, dist| sub.send(op, dist) } }.loc
 end
 
 def part2(data)
-  @a = 0
-  data.inject([0,0]) do |mem, (op, dist)|
-    mem.zip(PART2[op].call(dist)).map(&:sum)
-  end.inject(:*)
+  Sub2.new.tap { |sub| data.each { |op, dist| sub.send(op, dist) } }.loc
 end
 
-puts "*" * 80
-puts "Example 1: #{part1 EXAMPLE}"
-puts "Part 1: #{part1 INPUT}"
-puts "*" * 80
-puts "Example 2: #{part2 EXAMPLE}"
-puts "Part 2: #{part2 INPUT}"
+EXAMPLE = parse file "example"
+INPUT = parse file "input"
+
+puts <<~PART1
+##########
+# Part 1 #
+##########
+Example: #{part1 EXAMPLE}
+Solution: #{part1 INPUT}
+
+PART1
+
+puts <<~PART2
+##########
+# Part 2 #
+##########
+Example: #{part2 EXAMPLE}
+Solution: #{part2 INPUT}
+
+PART2
