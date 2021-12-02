@@ -24,7 +24,10 @@ class Sub2 < Sub1
   end
 
   def down(x) = @aim += x
-  def forward(x) = super && @depth += @aim * x
+  def forward(x)
+    super
+    @depth += @aim * x
+  end
 end
 
 def part1(data) = Sub1.new(data).loc
@@ -50,3 +53,47 @@ Example: #{part2 EXAMPLE}
 Solution: #{part2 INPUT}
 
 PART2
+
+def golf1(data)
+  data.inject([0, 0]) do |(x, y), (o, d)|
+    d = d.to_i
+    case o[0]
+    when "d" then y += d
+    when "u" then y -= d
+    else x += d
+    end
+    [x, y]
+  end.inject(:*)
+end
+
+def golf2(data)
+  data.inject([0, 0, 0]) do |(x, y, a), (o, d)|
+    d = d.to_i
+    case o[0]
+    when "d" then a += d
+    when "u" then a -= d
+    else 
+      x += d
+      y += a * d
+    end
+    [x, y, a]
+  end[0..-2].inject(:*)
+end
+
+puts <<~GOLF1
+##########
+# Golf 1 #
+##########
+Example: #{golf1 EXAMPLE}
+Solution: #{golf1 INPUT}
+
+GOLF1
+
+puts <<~GOLF2
+##########
+# Golf 2 #
+##########
+Example: #{golf2 EXAMPLE}
+Solution: #{golf2 INPUT}
+
+GOLF2
