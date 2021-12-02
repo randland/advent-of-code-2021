@@ -11,50 +11,37 @@ def parse(data)
 end
 
 class Sub1
-  def initialize
+  def initialize(commands)
     @horiz = 0
     @depth = 0
+    @commands = commands
+    run
   end
 
-  def forward(x)
-    @horiz += x
-  end
+  def run = @commands.each { |op, dist| send(op, dist) }
+  def loc = @horiz * @depth
 
-  def down(x)
-    @depth += x
-  end
-
-  def up(x)
-    down(-x)
-  end
-
-  def loc
-    @horiz * @depth
-  end
+  def down(x) = @depth += x
+  def forward(x) = @horiz += x
+  def up(x) = down(-x)
 end
 
 class Sub2 < Sub1
-  def initialize
-    super
+  def initialize(data)
     @aim = 0
+    super
   end
 
-  def forward(x)
-    @horiz += x
-    @depth += @aim * x
-  end
-
-  def down(x)
-    @aim += x
-  end
+  def down(x) = @aim += x
+  def forward(x) = super && @depth += @aim * x
 end
 
 def part1(data)
-  Sub1.new.tap { |sub| data.each { |op, dist| sub.send(op, dist) } }.loc
+  Sub1.new(data).loc
 end
 
 def part2(data)
-  Sub2.new.tap { |sub| data.each { |op, dist| sub.send(op, dist) } }.loc
+  Sub2.new(data).loc
 end
 
 EXAMPLE = parse file "example"
