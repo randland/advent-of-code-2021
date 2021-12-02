@@ -4,7 +4,9 @@ end
 
 def parse(data)
   data.split("\n").map do |com|
-    com.split(" ").yield_self { |op, dist| [op, dist.to_i] }
+    com.split(" ").yield_self do |op, dist|
+      [op.to_sym, dist.to_i]
+    end
   end
 end
 
@@ -12,42 +14,29 @@ EXAMPLE = parse file "example"
 INPUT1 = parse file "input1"
 INPUT2 = parse file "input2"
 
+PART1 = {
+  up: ->(d) { [0, -d] },
+  down: ->(d) { [0, d] },
+  forward: ->(d) { [d, 0] }
+}.freeze
+
+PART2 = {
+  up: ->(d) { @a -= d; [0, 0] },
+  down: ->(d) { @a += d; [0, 0] },
+  forward: ->(d) { [d, @a * d] }
+}.freeze
+
 def part1(data)
-  horiz = 0
-  depth = 0
-
-  data.each do |op, dist|
-    case dist
-    when "down"
-      depth += dist
-    when "up"
-      depth -= dist
-    else
-      horiz += dist
-    end
-  end
-
-  horiz * depth
+  data.inject([0,0]) do |mem, (op, dist)|
+    mem.zip(PART1[op].call(dist)).map(&:sum)
+  end.inject(:*)
 end
 
 def part2(data)
-  horiz = 0
-  depth = 0
-  aim = 0
-
-  data.each do |op, dist|
-    case op
-    when "down"
-      aim += dist
-    when "up"
-      aim -= dist
-    else
-      horiz += dist
-      depth += aim * dist
-    end
-  end
-
-  horiz * depth
+  @a = 0
+  data.inject([0,0]) do |mem, (op, dist)|
+    mem.zip(PART2[op].call(dist)).map(&:sum)
+  end.inject(:*)
 end
 
 puts "*" * 80
