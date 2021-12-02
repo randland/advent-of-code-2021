@@ -36,13 +36,8 @@ class Sub2 < Sub1
   def forward(x) = super && @depth += @aim * x
 end
 
-def part1(data)
-  Sub1.new(data).loc
-end
-
-def part2(data)
-  Sub2.new(data).loc
-end
+def part1(data) = Sub1.new(data).loc
+def part2(data) = Sub2.new(data).loc
 
 EXAMPLE = parse file "example"
 INPUT = parse file "input"
