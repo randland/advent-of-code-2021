@@ -1,34 +1,30 @@
 def file(path) = File.read(File.join(__dir__, path))
 
-def parse(data) = data.split("\n").map { |row| row.chars.map(&:to_i) }
+def parse(data) = data.split("\n")
+
+def sorted_by_idx(data, idx)
+  data.group_by { |row| row[idx] }.
+    to_a.sort_by { |char, rows| [rows.size, char.to_i] }
+end
+
+def sparse_val(data, idx) = sorted_by_idx(data, idx).first.first
+def sparse_rows(data, idx) = sorted_by_idx(data, idx).first.last
+def common_val(data, idx) = sorted_by_idx(data, idx).last.first
+def common_rows(data, idx) = sorted_by_idx(data, idx).last.last
+
+def calc_result(vals) = vals.map { |v| v.join.to_i(2) }.inject(:*)
 
 def part1(data)
-  data.transpose.map(&:sum).map do |sum|
-    sum >= (data.size + 1) / 2 ? 1 : 0
-  end.yield_self do |num|
-    num.map(&:to_s).join.to_i(2) *
-      num.map(&:to_s).map { |c| c == "1" ? "0" : "1" }.join.to_i(2)
-  end
-end
-
-def oxy_filter(data, idx)
-  groups = data.group_by { |row| row[idx] }
-  return groups.values.first if groups.size == 1
-
-  groups[0].size > groups[1].size ? groups[0] : groups[1]
-end
-
-def co2_filter(data, idx)
-  groups = data.group_by { |row| row[idx] }
-  return groups.values.first if groups.size == 1
-
-  groups[0].size <= groups[1].size ? groups[0] : groups[1]
+  data.first.size.times.each_with_object([[], []]) do |idx, (gam, eps)|
+    gam << common_val(data, idx)
+    eps << sparse_val(data, idx)
+  end.yield_self(&method(:calc_result))
 end
 
 def part2(data)
-  data.length.times.inject([data, data]) do |( oxy, co2 ), idx|
-    [oxy_filter(oxy, idx), co2_filter(co2, idx)]
-  end.map { |row| row.first.map(&:to_s).join.to_i(2) }.inject(:*)
+  data.first.size.times.inject([data, data]) do |(o2, co2), idx|
+    [common_rows(o2, idx), sparse_rows(co2, idx)]
+  end.yield_self(&method(:calc_result))
 end
 
 EXAMPLE = parse file "example"
