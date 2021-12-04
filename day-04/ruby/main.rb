@@ -5,7 +5,7 @@ def parse(data)
     [
       chunks.first.split(",").map(&:to_i),
       chunks[1..-1].map do |board|
-        board.split("\n").map { |row| row.strip.split(/\s+/).map(&:to_i) }
+        Board.new(board.split("\n").map { |row| row.strip.split(/\s+/).map(&:to_i) })
       end
     ]
   end
@@ -15,20 +15,19 @@ class Board
   attr_reader :board, :hits
   def initialize(board)
     @board = board
-    @hits = 5.times.map { [false] * 5 }
+    @hits = Array.new(5) { Array.new(5) { false } }
   end
 
   def mark_num(num)
     @board.each_with_index do |row, y|
       row.each_with_index do |val, x|
-        @hits[y][x] = true if val == num
+        @hits[y][x] ||= val == num
       end
     end
   end
 
   def win?
-    @hits.any? { |row| row.inject(:&) } ||
-      @hits.transpose.any? { |row| row.inject(:&) }
+    @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
   end
 
   def score
@@ -38,33 +37,25 @@ class Board
       end.sum
     end.sum
   end
-
-  def to_s
-    @board.map { |row| puts row.inspect }
-    @hits.map { |row| puts row.inspect }
-  end
 end
 
 def part1(data)
-  nums, raw_boards = data
-  boards = raw_boards.map(&Board.method(:new))
+  nums, boards = data
 
   nums.each do |num|
     boards.each { |board| board.mark_num(num) }
-    winner = boards.select(&:win?).first
+    winner = boards.find(&:win?)
     return winner.score * num if winner
   end
 end
 
 def part2(data)
-  nums, raw_boards = data
+  nums, boards = data
   won_boards = []
-  boards = raw_boards.map(&Board.method(:new))
 
   nums.each do |num|
     boards.each { |board| board.mark_num(num) }
-    won_boards += boards.select(&:win?)
-    boards -= won_boards
+    boards -= (won_boards += boards.select(&:win?))
     return won_boards.last.score * num if boards.size.zero?
   end
 end
