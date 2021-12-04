@@ -23,7 +23,7 @@ class Board
   def won? = @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
   def score = map_vals { |val, y, x| @hits[y][x] ? 0 : val }.flatten.sum
 
-  def map_vals
+  private def map_vals
     @board.map.with_index { |row, y| row.map.with_index { |val, x| yield val, y, x } }
   end
 end
