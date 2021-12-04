@@ -5,35 +5,38 @@ def parse(data)
     [
       chunks.first.split(",").map(&:to_i),
       chunks[1..-1].map do |board|
-        Board.new(board.split("\n").map { |row| row.strip.split(/\s+/).map(&:to_i) })
-      end
+        board.split("\n").map do |row|
+          row.strip.split(/\s+/).map(&:to_i)
+        end
+      end.map(&Board.method(:new))
     ]
   end
 end
 
 class Board
   attr_reader :board, :hits
+
   def initialize(board)
     @board = board
-    @hits = Array.new(5) { Array.new(5) { false } }
+    @hits = Array.new(5) { Array.new(5) }
   end
 
   def mark_num(num)
-    @board.each_with_index do |row, y|
+    board.each_with_index do |row, y|
       row.each_with_index do |val, x|
-        @hits[y][x] ||= val == num
+        hits[y][x] ||= val == num
       end
     end
   end
 
   def win?
-    @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
+    hits.any?(&:all?) || hits.transpose.any?(&:all?)
   end
 
   def score
-    @board.map.with_index do |row, y|
+    board.map.with_index do |row, y|
       row.map.with_index do |val, x|
-        @hits[y][x] ? 0 : val
+        hits[y][x] ? 0 : val
       end.sum
     end.sum
   end
