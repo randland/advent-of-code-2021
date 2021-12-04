@@ -19,19 +19,9 @@ class Board
     @hits = Array.new(5) { Array.new(5) }
   end
 
-  def mark(num)
-    map_vals { |val, y, x| @hits[y][x] ||= val == num }
-  end
-
-  def won?
-    @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
-  end
-
-  def score
-    map_vals { |val, y, x| @hits[y][x] ? 0 : val }.flatten.sum
-  end
-
-  private
+  def mark(num) = map_vals { |val, y, x| @hits[y][x] ||= val == num }
+  def won? = @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
+  def score = map_vals { |val, y, x| @hits[y][x] ? 0 : val }.flatten.sum
 
   def map_vals
     @board.map.with_index { |row, y| row.map.with_index { |val, x| yield val, y, x } }
