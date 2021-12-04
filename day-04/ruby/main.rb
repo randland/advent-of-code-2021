@@ -14,31 +14,27 @@ def parse(data)
 end
 
 class Board
-  attr_reader :board, :hits
-
   def initialize(board)
     @board = board
     @hits = Array.new(5) { Array.new(5) }
   end
 
-  def mark_num(num)
-    board.each_with_index do |row, y|
-      row.each_with_index do |val, x|
-        hits[y][x] ||= val == num
-      end
-    end
+  def mark(num)
+    map_vals { |val, y, x| @hits[y][x] ||= val == num }
   end
 
-  def win?
-    hits.any?(&:all?) || hits.transpose.any?(&:all?)
+  def won?
+    @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
   end
 
   def score
-    board.map.with_index do |row, y|
-      row.map.with_index do |val, x|
-        hits[y][x] ? 0 : val
-      end.sum
-    end.sum
+    map_vals { |val, y, x| @hits[y][x] ? 0 : val }.flatten.sum
+  end
+
+  private
+
+  def map_vals
+    @board.map.with_index { |row, y| row.map.with_index { |val, x| yield val, y, x } }
   end
 end
 
@@ -46,8 +42,8 @@ def part1(data)
   nums, boards = data
 
   nums.each do |num|
-    boards.each { |board| board.mark_num(num) }
-    winner = boards.find(&:win?)
+    boards.each { |board| board.mark(num) }
+    winner = boards.find(&:won?)
     return winner.score * num if winner
   end
 end
@@ -57,9 +53,9 @@ def part2(data)
   won_boards = []
 
   nums.each do |num|
-    boards.each { |board| board.mark_num(num) }
-    boards -= (won_boards += boards.select(&:win?))
-    return won_boards.last.score * num if boards.size.zero?
+    boards.each { |board| board.mark(num) }
+    boards -= (won_boards += boards.select(&:won?))
+    return won_boards.last.score * num if boards.empty?
   end
 end
 
