@@ -1,4 +1,6 @@
-def file(path) = File.read(File.join(__dir__, path))
+def file(path)
+  File.read(File.join(__dir__, path))
+end
 
 def parse(data)
   data.split("\n").map do |row|
@@ -9,59 +11,57 @@ def parse(data)
 end
 
 class Vent
+  attr_reader :x1, :x2, :y1, :y2
+
   def initialize(coords)
-    @xs, @ys = coords.sort_by(&:first).transpose
+    (@x1, @y1), (@x2, @y2) = coords.sort_by(&:first)
   end
 
-  def max_x = @max_x ||= @xs[1]
-  def max_y = @max_y ||= @ys.max
-  def x_vals = @x_vals ||= @xs[0].step(@xs[1], 1).to_a
-  def y_vals = @y_vals ||= @ys[0].step(@ys[1], @ys[0] < @ys[1] ? 1 : -1).to_a
+  def x_vals
+    (x1..x2).to_a
+  end
+
+  def y_vals
+    y1.step(y2, y1 < y2 ? 1 : -1).to_a
+  end
 
   def vals
-    return [] unless @xs.inject(:==) || @ys.inject(:==)
+    return [] unless x1 == x2 || y1 == y2
 
     vals2
   end
 
   def vals2
-    if x_vals.size == 1
-      y_vals.map { |y| [x_vals[0], y] }
-    elsif y_vals.size == 1
-      x_vals.map { |x| [x, y_vals[0]] }
+    if x1 == x2
+      y_vals.map { |y| [x1, y] }
+    elsif y1 == y2
+      x_vals.map { |x| [x, y1] }
     else
       x_vals.zip(y_vals)
     end
   end
 end
 
-def part1(data)
-  width = data.map(&:max_x).max + 1
-  height = data.map(&:max_y).max + 1
+def count_spikes(vent_coords, min_height = 2)
+  Hash.new(0).tap do |height_map|
+    vent_coords.each { |coord| height_map[coord] += 1 }
+  end.values.count { |height| height >= min_height }
+end
 
-  map = Array.new(height) { Array.new(width) { 0 } }
-  data.map(&:vals).compact.flatten(1).each { |x, y| map[y][x] += 1 }
-  map.flatten.count { |n| n > 1 }
+def part1(data)
+  count_spikes(data.map(&:vals).compact.flatten(1))
 end
 
 def part2(data)
-  width = data.map(&:max_x).max + 1
-  height = data.map(&:max_y).max + 1
-
-  map = Array.new(height) { Array.new(width) { 0 } }
-  data.map(&:vals2).compact.flatten(1).each { |x, y| map[y][x] += 1 }
-  map.flatten.count { |n| n > 1 }
+  count_spikes(data.map(&:vals2).compact.flatten(1))
 end
-
-EXAMPLE = parse file "example"
-INPUT = parse file "input"
 
 puts <<~PART1
 ##########
 # Part 1 #
 ##########
-Example: #{part1 EXAMPLE}
-Solution: #{part1 INPUT}
+Example: #{part1 parse file "example"}
+Solution: #{part1 parse file "input"}
 
 PART1
 
@@ -69,7 +69,7 @@ puts <<~PART2
 ##########
 # Part 2 #
 ##########
-Example: #{part2 EXAMPLE}
-Solution: #{part2 INPUT}
+Example: #{part2 parse file "example"}
+Solution: #{part2 parse file "input"}
 
 PART2
