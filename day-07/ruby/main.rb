@@ -11,7 +11,12 @@ def part1(data)
 end
 
 def part2(data)
-  (data.min..data.max).map { |i| data.map { |d| (d - i).abs.yield_self { |n| n * (n + 1) / 2 } }.sum }.min
+  (data.min..data.max).map do |i|
+    data.map do |d|
+      n = (d - i).abs
+      n * (n + 1) / 2
+    end.sum
+  end.min
 end
 
 puts <<~END
