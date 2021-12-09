@@ -45,11 +45,15 @@ def part1(data)
   low_spots(data).map { |r, c| data[r][c] + 1 }.sum
 end
 
+def basin(data, low_spot)
+  [low_spot].tap do |group|
+    while(group != expand_group(data, group)); end
+  end
+end
+
 def part2(data)
   low_spots(data).map do |low_spot|
-    [low_spot].tap do |group|
-      while(group != expand_group(data, group)); end
-    end.count
+    basin(data, low_spot).count
   end.sort.last(3).inject(:*)
 end
 
