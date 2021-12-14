@@ -16,18 +16,15 @@ def parse(data)
 end
 
 class Paper
-  attr_reader :dots
+  attr_reader :dots, :h, :w
 
   def initialize(dots)
     @dots = dots
-  end
 
-  def h
-    dots.to_a.transpose.last.max
-  end
-
-  def w
-    dots.to_a.transpose.first.max
+    dots.to_a.transpose.tap do |x_vals, y_vals|
+      @h = y_vals.max
+      @w = x_vals.max
+    end
   end
 
   def fold_x(val)
@@ -53,14 +50,14 @@ class Paper
       (0..w).map do |x|
         dots.include?([x, y]) ? "#" : "."
       end.join
-    end.join("\n") + "\nCount: #{dots.count}"
+    end.join("\n")
   end
 end
 
 def part1(data)
   data.yield_self do |paper, folds|
     Paper.new(paper).send("fold_#{folds.first.first}", folds.first.last)
-  end
+  end.dots.count
 end
 
 def part2(data)
