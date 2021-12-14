@@ -29,13 +29,9 @@ class Formula
   end
 
   def step
-    new_counts = Hash.new(0)
-    counts.each do |pair, count|
-      rules[pair].each do |new_pair|
-        new_counts[new_pair] += count
-      end
+    @counts = Hash.new(0).tap do |new_counts|
+      counts.each { |pair, count| rules[pair].each { |new_pair| new_counts[new_pair] += count } }
     end
-    @counts = new_counts
   end
 
   def char_counts
