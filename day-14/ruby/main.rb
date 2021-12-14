@@ -10,7 +10,7 @@ def parse(data)
       formula.first,
       rules.inject({}) do |rule_hash, raw_rule|
         raw_rule.split(" -> ").yield_self do |outer, inner|
-          rule_hash.merge(outer => [outer[0] + inner, inner + outer[1]])
+          rule_hash.merge(outer.chars => [outer[0], inner, outer[1]].each_cons(2))
         end
       end
     ]
@@ -24,8 +24,7 @@ class Formula
     @last_char = formula[-1]
     @rules = rules
     @counts = Hash.new(0)
-
-    formula.chars.each_cons(2).map(&:join).each { |pair| counts[pair] += 1 }
+    formula.chars.each_cons(2).each { |pair| counts[pair] += 1 }
   end
 
   def step
