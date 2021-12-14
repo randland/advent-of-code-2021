@@ -5,7 +5,7 @@ def file(path)
 end
 
 def parse(data)
-  Cave.new(data.split("\n").map { |row| row.split("-") })
+  data.split("\n").map { |row| row.split("-") }
 end
 
 class Cave
@@ -26,13 +26,17 @@ class Cave
     a.connect_to(b)
     b.connect_to(a)
   end
+
+  def [](key)
+    graph[key]
+  end
 end
 
 class Node
-  attr_reader :name, :upper, :connections
+  attr_reader :name, :small, :connections
   def initialize(name)
     @name = name
-    @upper = name == name.upcase
+    @small = name == name.downcase
     @connections = Set.new
   end
 
@@ -41,57 +45,67 @@ class Node
   end
 
   def inspect
-    to_s
-  end
-
-  def to_s
     name
   end
 end
 
-def trails(graph, trail)
-  return trail if trail.last.name == "end"
+class PathFinder
+  def self.call(data, start_node, small_max_count)
+    new(data, start_node, small_max_count).call
+  end
 
-  graph[trail.last.name].connections.map do |node|
-    next if !node.upper && trail[0..-2].include?(node)
+  def call
+    find_paths([start_node])
+    paths
+  end
 
-    trails(graph, trail.clone << node)
-  end.compact
+  private
+
+  attr_reader :start_node, :small_max_count, :paths
+
+  def initialize(data, start_node, small_max_count)
+    cave = Cave.new(data)
+    @start_node = cave.graph[start_node]
+    @small_max_count = small_max_count
+    @paths = Set.new
+  end
+
+  def find_paths(path)
+    @paths << path and return if path.last.name == "end"
+
+    path.last.connections.each do |node|
+      new_path = path.clone << node
+      next if node.name == "start"
+
+      small_counts = new_path.select(&:small).group_by(&:name).values.map(&:count).sort.reverse
+      next if small_counts[0] > small_max_count
+      next if (small_counts[1] || 0) > 1
+
+      find_paths(new_path)
+    end
+  end
 end
 
 def part1(data)
-  trails(data.graph, [data.graph["start"]]).flatten.map(&:name).count("end")
-end
-
-def trails2(graph, trail, visited)
-  return trail if trail.last.name == "end"
-
-  graph[trail.last.name].connections.map do |node|
-    new_trail = trail.clone << node
-    next if node.name == "start"
-    smalls = trail.reject(&:upper).group_by(&:to_s).values.map(&:count)
-    next if smalls.any? { |v| v > 2 }
-    next if smalls.count { |v| v == 2 } >= 2
-
-    trails2(graph, trail.clone << node, visited || trail.count(trail.last) > 1)
-  end.compact
+  PathFinder.(data, "start", 1).count
 end
 
 def part2(data)
-  trails2(data.graph, [data.graph["start"]], false).flatten.map(&:name).count("end")
+  PathFinder.(data, "start", 2).count
 end
 
 puts <<~END
 ##########
 # Part 1 #
 ##########
-Example: #{part1 parse file "example"}
-Solution: #{part1 parse file "input"}
+END
+puts "Example: #{part1 parse file "example"}"
+puts "Solution: #{part1 parse file "input"}"
 
+puts <<~END
 ##########
 # Part 2 #
 ##########
-Example: #{part2 parse file "example"}
-Solution: #{part2 parse file "input"}
-
 END
+puts "Example: #{part2 parse file "example"}"
+puts "Solution: #{part2 parse file "input"}"
