@@ -42,8 +42,7 @@ class Octos
   end
 
   def synched?
-    val = grid[0][0]
-    grid.all? { |row| row.all? { |el| el == val } }
+    grid.all? { |row| row.all? { |el| el == grid[0][0] } }
   end
 
   def to_s
@@ -52,10 +51,11 @@ class Octos
 
   def neighbors(ri, ci)
     (-1..1).map do |ro|
-      (-1..1).map { |co| [ri + ro, ci + co] }.
-        select do |r, c|
-          (0..9).include?(r) && (0..9).include?(c)
-        end
+      (-1..1).map do |co|
+        [ri + ro, ci + co]
+      end.select do |r, c|
+        (0..9).include?(r) && (0..9).include?(c)
+      end
     end.flatten(1)
   end
 
@@ -77,10 +77,7 @@ end
 
 def part2(data)
   Octos.new(data).yield_self do |octo|
-    until octo.synched? do
-      puts octo
-      octo.step
-    end
+    octo.step until octo.synched?
     octo.steps
   end
 end
