@@ -22,6 +22,14 @@ class Paper
     @dots = dots
   end
 
+  def h
+    dots.to_a.transpose.last.max
+  end
+
+  def w
+    dots.to_a.transpose.first.max
+  end
+
   def fold_x(val)
     new_dots = Set.new
     dots.each do |x, y|
