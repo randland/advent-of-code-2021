@@ -6,14 +6,7 @@ end
 
 def parse(data)
   data.split("\n\n").map { |chunk| chunk.split("\n") }.yield_self do |formula, rules|
-    [
-      formula.first,
-      rules.inject({}) do |rule_hash, raw_rule|
-        raw_rule.split(" -> ").yield_self do |outer, inner|
-          rule_hash.merge(outer.chars => [outer[0], inner, outer[1]].each_cons(2))
-        end
-      end
-    ]
+    [formula.first, rules.map { |rule| rule.split(" -> ") }]
   end
 end
 
@@ -22,26 +15,30 @@ class Formula
 
   def initialize(formula, rules)
     @last_char = formula[-1]
-    @rules = rules
-    @counts = Hash.new(0)
-    formula.chars.each_cons(2).each { |pair| counts[pair] += 1 }
+    @rules = rules.inject({}) do |hash, (o, i)|
+               hash.merge(o.chars => [o[0], i, o[1]].each_cons(2))
+             end
+
+    @counts = Hash.new(0).tap do |hash|
+                formula.chars.each_cons(2).each { |pair| hash[pair] += 1 }
+              end
   end
 
   def step
-    @counts = Hash.new(0).tap do |new_counts|
-      counts.each { |pair, count| rules[pair].each { |new_pair| new_counts[new_pair] += count } }
+    @counts = Hash.new(0).tap do |hash|
+      counts.each do |pair, count|
+        rules[pair].each { |new_pair| hash[new_pair] += count }
+      end
     end
   end
 
-  def char_counts
-    Hash.new(0).tap do |count_hash|
-      count_hash[last_char] = 1
-      counts.each { |pair, count| count_hash[pair[0]] += count }
-    end.values
-  end
-
   def score
-    char_counts.max - char_counts.min
+    Hash.new(0).tap do |hash|
+      hash[last_char] = 1
+      counts.each { |pair, count| hash[pair[0]] += count }
+    end.values.yield_self do |char_counts|
+      char_counts.max - char_counts.min
+    end
   end
 end
 
