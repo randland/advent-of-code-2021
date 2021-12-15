@@ -60,12 +60,12 @@ class PathFinder
     @width = @risks.width
     @height = @risks.height
     @costs = MinGraph.new(
-      Array.new(@height) { Array.new(@width) { Float::INFINITY } }
+      Array.new(height) { Array.new(width) { Float::INFINITY } }
     )
   end
 
   def calc_costs
-    costs.set(0, 0, 0)
+    costs.set([0, 0], 0)
     queue = Set.new
     queue << [0, 0]
 
