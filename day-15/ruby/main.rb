@@ -66,9 +66,13 @@ class PathFinder
 
   def calc_costs
     costs.set(0, 0, 0)
-    queue = [[0, 0]]
+    queue = Set.new
+    queue << [0, 0]
 
-    queue.concat(calc_costs_from(queue.shift)) while queue.any?
+    while queue.any?
+      queue.delete(coord = queue.first)
+      queue.merge(calc_costs_from(coord))
+    end
   end
 
   def final_cost
