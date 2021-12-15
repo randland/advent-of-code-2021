@@ -31,9 +31,8 @@ class Graph
   def neighbors(*coord)
     x, y = Array(coord).flatten
     NEIGHBOR_OFFSETS.map do |xo, yo|
-      new_coord = [x + xo, y + yo]
-      next unless in_grid?(new_coord)
-      new_coord
+      neighbor = [x + xo, y + yo]
+      neighbor if in_grid?(neighbor)
     end.compact
   end
 
@@ -47,16 +46,29 @@ class Graph
   end
 end
 
+class MinGraph < Graph
+  def set(*coord, val)
+    return false if val >= get(coord)
+
+    super
+  end
+end
+
 class PathFinder
   def initialize(risks)
     @risks = Graph.new(risks)
     @width = @risks.width
     @height = @risks.height
-    @costs = Graph.new(
+    @costs = MinGraph.new(
       Array.new(@height) { Array.new(@width) { Float::INFINITY } }
     )
+  end
+
+  def calc_costs
     costs.set(0, 0, 0)
-    calc_costs
+    queue = [[0, 0]]
+
+    queue.concat(calc_costs_from(queue.shift)) while queue.any?
   end
 
   def final_cost
@@ -67,25 +79,15 @@ class PathFinder
 
   attr_reader :costs, :risks, :height, :width
 
-  def calc_costs
-    queue = [[0, 0]]
-
-    queue.concat(calc_costs_from(queue.shift)) while queue.any?
-  end
-
   def calc_costs_from(*coord)
     costs.neighbors(coord).map do |neighbor|
-      cost_from_here = costs.get(coord) + risks.get(neighbor)
-      next if cost_from_here >= costs.get(neighbor)
-
-      costs.set(neighbor, cost_from_here)
-      neighbor
+      neighbor if costs.set(neighbor, costs.get(coord) + risks.get(neighbor))
     end.compact
   end
 end
 
 def part1(data)
-  PathFinder.new(data).final_cost
+  PathFinder.new(data).tap(&:calc_costs).final_cost
 end
 
 def expand_graph(data)
@@ -106,7 +108,7 @@ def expand_graph(data)
 end
 
 def part2(data)
-  PathFinder.new(expand_graph(data)).final_cost
+  PathFinder.new(expand_graph(data)).tap(&:calc_costs).final_cost
 end
 
 puts <<~END
