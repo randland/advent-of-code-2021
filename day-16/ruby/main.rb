@@ -76,14 +76,15 @@ class BitLengthOperator < Packet
     return @values if defined? @values
 
     idx = prefix_length
-    @values = []
     length = prefix_length + data[7, 15].to_i(2)
-    until idx + 11 > length do
-      break if data[idx..length].to_i(2).zero?
+
+    @values = []
+    until idx + 11 > length || data[idx..length].to_i(2).zero?
       @values << get_packet_at(idx)
       idx += @values.last.length
     end 
-    values
+
+    @values
   end
 
   def version_agg
@@ -101,6 +102,7 @@ class SubPacketsOperator < Packet
 
     idx = prefix_length
     packet_count = data[7, 11].to_i(2)
+
     @values = packet_count.times.map do
       get_packet_at(idx).tap do |packet|
         idx += packet.length
