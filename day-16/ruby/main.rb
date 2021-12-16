@@ -80,10 +80,10 @@ class BitLengthOperator < Packet
     return @values if defined? @values
 
     idx = prefix_length
-    length = prefix_length + data[7, 15].to_i(2)
+    val_length = prefix_length + data[7, 15].to_i(2)
 
     @values = []
-    until idx + 11 > length || data[idx..length].to_i(2).zero?
+    until idx > val_length - 11 || data[idx..val_length].to_i(2).zero?
       @values << get_packet_at(idx)
       idx += @values.last.length
     end 
