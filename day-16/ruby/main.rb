@@ -47,6 +47,10 @@ class Packet
   def get_packet_at(idx)
     self.class.from(data[idx..])
   end
+
+  def version_agg
+    version + values.map(&:version_agg).sum
+  end
 end
 
 class Literal < Packet
@@ -86,10 +90,6 @@ class BitLengthOperator < Packet
 
     @values
   end
-
-  def version_agg
-    version + values.map(&:version_agg).sum
-  end
 end
 
 class SubPacketsOperator < Packet
@@ -108,10 +108,6 @@ class SubPacketsOperator < Packet
         idx += packet.length
       end
     end
-  end
-
-  def version_agg
-    version + values.map(&:version_agg).sum
   end
 end
 
