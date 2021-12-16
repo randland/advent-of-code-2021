@@ -13,11 +13,6 @@ class Packet
 
   def initialize(data)
     @data = data
-    chop!
-  end
-
-  def self.version(data)
-    data[0, 3].to_i(2)
   end
 
   def self.type(data)
@@ -38,7 +33,7 @@ class Packet
   end
 
   def version
-    self.class.version(data)
+    data[0, 3].to_i(2)
   end
 
   def type
@@ -49,20 +44,8 @@ class Packet
     prefix_length + values.map(&:length).sum
   end
 
-  def chop!
-    @data = data[0, length]
-  end
-
   def get_packet_at(idx)
-    self.class.from(data[idx..]).tap(&:values).tap(&:chop!)
-  end
-
-  def inspect
-    "#{self.class} v#{version} t#{type} #{self.data.inspect} - #{self.values}"
-  end
-
-  def to_s
-    inspect
+    self.class.from(data[idx..])
   end
 end
 
