@@ -4,28 +4,23 @@ def file(path)
   File.read(File.join(__dir__, path))
 end
 
-NUM_EX = /([0-9-]*)/
-REGEX = /.*x=#{NUM_EX}..#{NUM_EX}, y=#{NUM_EX}..#{NUM_EX}/
 def parse(data)
-  data.match(REGEX).to_a.map(&:to_i).
-    yield_self do |_matches, x_min, x_max, y_min, y_max|
-      [(x_min..x_max), (y_min..y_max)]
-    end
+  data.scan(/[0-9-]+/).map(&:to_i).yield_self do |x_min, x_max, y_min, y_max|
+    { x: (x_min..x_max), y: (y_min..y_max) }
+  end
 end
 
 def y_needed(target_y)
   target_y.positive? ? target_y : -target_y - 1
-  -target_y - 1
 end
 
 def hits_target?(xd, yd, data)
-  x = 0
-  y = 0
+  x = y = 0
 
-  until x > data[0].max || y < data[1].min
+  until x > data[:x].max || y < data[:y].min
     x += xd
     y += yd
-    return true if data[0].include?(x) && data[1].include?(y)
+    return true if data[:x].include?(x) && data[:y].include?(y)
 
     xd -= 1 if xd > 0
     yd -= 1
@@ -35,14 +30,14 @@ def hits_target?(xd, yd, data)
 end
 
 def part1(data)
-  (1..y_needed(data[1].min)).inject(:+)
+  (1..y_needed(data[:y].min)).inject(:+)
 end
 
 def part2(data)
-  max_y = [y_needed(data[1].min), y_needed(data[1].max)].max
-  min_y = data[1].min
-  max_x = data[0].max
-  min_x = 1
+  max_y = [y_needed(data[:y].min), y_needed(data[:y].max)].max
+  min_y = data[:y].min
+  max_x = data[:x].max
+  min_x = 0
 
   (min_x..max_x).map do |x|
     (min_y..max_y).map do |y|
