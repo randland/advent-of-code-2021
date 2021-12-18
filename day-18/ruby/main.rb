@@ -84,32 +84,28 @@ def reduce!(str)
   str
 end
 
+def add(lhs, rhs)
+  result = [ "[", lhs, ",", rhs, "]"].flatten
+
+  test = reduce!(result)
+  while test != result
+    result = test
+    test = reduce!(result)
+  end
+
+  result
+end
+
 def part1(data)
   val = eval(data.map(&method(:split_string)).inject do |lhs, rhs|
-    new_val = [ "[", lhs, ",", rhs, "]"].flatten
-
-    test = reduce!(new_val)
-    while test != new_val
-      new_val = test
-      test = reduce!(new_val)
-    end
-
-    new_val
+    add(lhs, rhs)
   end.join)
   mag val
 end
 
 def part2(data)
   data.map(&method(:split_string)).permutation(2).map do |a, b|
-    new_val = [ "[", a, ",", b, "]"].flatten
-
-    test = reduce!(new_val)
-    while test != new_val
-      new_val = test
-      test = reduce!(new_val)
-    end
-
-    new_val
+    add(a, b)
   end.map do |str|
     mag(eval(str.join))
   end.max
