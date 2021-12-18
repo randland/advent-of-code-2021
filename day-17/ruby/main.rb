@@ -133,28 +133,27 @@ END
 puts "Example: #{part2 parse file "example"}"
 puts "Solution: #{part2 parse file "input"}"
 
-def hit?(xd, yd, data)
-  x = y = 0
+def hit?(xd, yd, area)
+  xi = yi = 0
 
-  until x > data[:x].max || y < data[:y].min
-    x += xd
-    y += yd
+  until xi > area[:x].max || yi < area[:y].min
+    return true if area[:x].cover?(xi) && area[:y].cover?(yi)
+
+    xi += xd
+    yi += yd
     xd -= 1 if xd > 0
     yd -= 1
-    return true if data[:x].cover?(x) && data[:y].cover?(y)
   end
-
-  false
 end
 
-def golf1(data)
-  (-data[:y].min - 1).then { |y| y * (y + 1) / 2 }
+def golf1(area)
+  (-area[:y].min - 1).then { |y| y * (y + 1) / 2 }
 end
 
-def golf2(data)
-  x_range = (0..data[:x].max).to_a
-  y_range = (data[:y].min..-data[:y].min-1).to_a
-  x_range.product(y_range).select { |x, y| hit?(x, y, data) }.count
+def golf2(area)
+  xs = (0..area[:x].max).to_a
+  ys = (area[:y].min..-area[:y].min-1).to_a
+  xs.product(ys).select { |x, y| hit?(x, y, area) }.count
 end
 
 puts <<~END
