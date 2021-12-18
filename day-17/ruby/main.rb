@@ -139,9 +139,9 @@ def hit?(xd, yd, data)
   until x > data[:x].max || y < data[:y].min
     x += xd
     y += yd
-    return true if data[:x].cover?(x) && data[:y].cover?(y)
     xd -= 1 if xd > 0
     yd -= 1
+    return true if data[:x].cover?(x) && data[:y].cover?(y)
   end
 
   false
@@ -152,7 +152,9 @@ def golf1(data)
 end
 
 def golf2(data)
-  (0..data[:x].max).map { |x| (data[:y].min..-data[:y].min - 1).select { |y| [x, y] if hit?(x, y, data) } }.flatten(1).count
+  x_range = (0..data[:x].max).to_a
+  y_range = (data[:y].min..-data[:y].min-1).to_a
+  x_range.product(y_range).select { |x, y| hit?(x, y, data) }.count
 end
 
 puts <<~END
