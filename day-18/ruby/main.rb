@@ -32,34 +32,22 @@ def find_big_num(str)
   nil
 end
 
-def mag(arr)
-  return arr if arr.is_a? Integer
-  3 * mag(arr[0]) + 2 * mag(arr[1])
+def add_to_next_num(substr, val)
+  substr.each_index do |idx|
+    if substr[idx].is_a? Integer
+      substr[idx] += val
+      break
+    end
+  end
+
+  substr
 end
 
 def explode!(str, idx)
-  start = str[0...idx].reverse
-  x = str[idx + 1]
-  start.each_index do |idx|
-    if start[idx].is_a? Integer
-      start[idx] += x
-      break
-    end
-  end
-  start = start.reverse
-  rest = str[idx + 5..]
-  y = str[idx + 3]
-  rest.each_index do |idx|
-    if rest[idx].is_a? Integer
-      rest[idx] += y
-      break
-    end
-  end
-  [
-    start,
-    0,
-    rest
-  ].flatten
+  start = add_to_next_num(str[0...idx].reverse, str[idx + 1]).reverse
+  rest = add_to_next_num(str[idx + 5..], str[idx + 3])
+
+  [start, 0, rest].flatten
 end
 
 def split!(str, idx)
@@ -67,33 +55,26 @@ def split!(str, idx)
   rest = str[idx + 1..]
   val = str[idx] / 2.0
 
-  [
-    start,
-    "[", val.floor.to_i, ",", val.ceil.to_i, "]",
-    rest
-  ].flatten
+  [start, "[", val.floor.to_i, ",", val.ceil.to_i, "]", rest].flatten
 end
 
 def reduce!(str)
   if deep = find_deep_start(str)
-    return explode!(str, deep)
+    reduce!(explode!(str, deep))
   elsif big = find_big_num(str)
-    return split!(str, big)
+    reduce!(split!(str, big))
+  else
+    str
   end
-
-  str
 end
 
 def add(lhs, rhs)
-  result = [ "[", lhs, ",", rhs, "]"].flatten
+  reduce! [ "[", lhs, ",", rhs, "]"].flatten
+end
 
-  test = reduce!(result)
-  while test != result
-    result = test
-    test = reduce!(result)
-  end
-
-  result
+def mag(arr)
+  return arr if arr.is_a? Integer
+  3 * mag(arr[0]) + 2 * mag(arr[1])
 end
 
 def part1(data)
