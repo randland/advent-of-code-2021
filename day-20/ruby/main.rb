@@ -7,31 +7,37 @@ end
 
 def parse(data)
   data.split("\n\n").then do |alg, img|
-    [alg, img.split("\n").map { |row| row.chars }]
+    [
+      alg.chars.map { |v| v == "#" ? 1 : 0 },
+      img.split("\n").map do |row|
+        row.chars.map { |v| v == "#" ? 1 : 0 }
+      end
+    ]
   end
 end
 
 class Image
-  attr_reader :image, :max_iter, :pad
+  attr_reader :image
 
-  def initialize(image, max_iter)
-    w = image.first.size
-    @max_iter = max_iter
-    @pad = 3 * max_iter
-    @image = [
-      Array.new(pad) { ["."] * (pad * 2 + w) },
-      image.map { |row| ["."] * pad + row + ["."] * pad },
-      Array.new(pad) { ["."] * (pad * 2 + w)}
-    ].flatten(1)
+  def initialize(image)
+    @image = image
+    @outer = [0]
   end
 
   def apply(alg)
-    new_image = Array.new(image.size) { Array.new(image.first.size) { "." } }
+    new_image = Array.new(image.size + 2) { Array.new(image.first.size + 2) { @outer.first } }
     new_image.each_with_index do |row, ri|
       row.each_with_index do |pixel, ci|
-        row[ci] = alg[extract_pixel_val(ri, ci)]
+        row[ci] = alg[extract_pixel_val(ri - 1, ci - 1)]
       end
     end
+
+    if alg[0] == 1 && image[0][0] == 0
+      @outer = [1]
+    elsif alg[511] == 0 && image[0][0] == 1
+      @outer = [0]
+    end
+
     @image = new_image
   end
 
@@ -40,30 +46,29 @@ class Image
     (-1..1).to_a.repeated_permutation(2).map do |ro, co|
       ri = r + ro
       ci = c + co
-      next "0" unless (0...image.size).cover?(ri) && (0...image.first.size).cover?(ci)
+      next @outer unless (0...image.size).cover?(ri) && (0...image.first.size).cover?(ci)
 
-      @image[ri][ci] == "#" ? "1" : "0"
+      @image[ri][ci]
     end.join.to_i(2)
   end
 
   def output_image
-    true_pad = pad - max_iter
-    @image[true_pad...-true_pad].map { |row| row[true_pad...-true_pad] }
+    image.map { |r| r.map { |c| c == 1 ? "#" : "." }.join }
+  end
+
+  def pixels
+    image.sum(&:sum)
   end
 end
 
 def part1(data)
   alg, raw_img = data
-  Image.new(raw_img, 2).tap do |image|
-    2.times { image.apply(alg) }
-  end.output_image.flatten.count("#")
+  Image.new(raw_img).tap { |image| 2.times { image.apply(alg) } }.pixels
 end
 
 def part2(data)
   alg, raw_img = data
-  Image.new(raw_img, 50).tap do |image|
-    50.times { image.apply(alg) }
-  end.output_image.flatten.count("#")
+  Image.new(raw_img).tap { |image| 50.times { image.apply(alg) } }.pixels
 end
 
 puts <<~END
