@@ -78,9 +78,7 @@ def mag(arr)
 end
 
 def part1(data)
-  val = eval(data.map(&method(:split_string)).inject do |lhs, rhs|
-    add(lhs, rhs)
-  end.join)
+  val = eval(data.map(&method(:split_string)).inject(&method(:add)).join)
   mag val
 end
 
