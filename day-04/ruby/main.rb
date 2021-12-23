@@ -1,63 +1,67 @@
 def file(path) = File.read(File.join(__dir__, path))
 
 def parse(data)
-  data.split("\n\n").yield_self do |chunks|
-    [
-      chunks.first.split(",").map(&:to_i),
-      chunks[1..-1].map do |board|
-        board.split("\n").map do |row|
-          row.strip.split(/\s+/).map(&:to_i)
-        end
-      end.map(&Board.method(:new))
-    ]
+  data.split("\n\n").then do |chunks|
+    draws = chunks.first.split(",").map(&:to_i)
+    boards = chunks[1..-1].map do |board|
+               board.split("\n").map do |row|
+                 row.strip.split(/\s+/).map(&:to_i)
+               end
+             end
+
+    { draws: draws, boards: boards }
   end
 end
 
 class Board
+  attr_reader :board
+
   def initialize(board)
     @board = board
-    @hits = Array.new(5) { Array.new(5) }
   end
 
-  def mark(num) = map_vals { |val, y, x| @hits[y][x] ||= val == num }
-  def won? = @hits.any?(&:all?) || @hits.transpose.any?(&:all?)
-  def score = map_vals { |val, y, x| @hits[y][x] ? 0 : val }.flatten.sum
+  def mark(draw)
+    board.each { |row| (hit = row.index(draw)) && row[hit] = nil }
+  end
 
-  private def map_vals
-    @board.map.with_index { |row, y| row.map.with_index { |val, x| yield val, y, x } }
+  def won?
+    board.any?(&:none?) || board.transpose.any?(&:none?)
+  end
+
+  def score
+    board.flatten.compact.sum
   end
 end
 
 def part1(data)
-  nums, boards = data
+  draws = data[:draws]
+  boards = data[:boards].map { |b| Board.new(b) }
 
-  nums.each do |num|
-    boards.each { |board| board.mark(num) }
+  draws.each do |draw|
+    boards.each { |board| board.mark(draw) }
     winner = boards.find(&:won?)
-    return winner.score * num if winner
+    return winner.score * draw if winner
   end
 end
 
 def part2(data)
-  nums, boards = data
-  won_boards = []
+  draws = data[:draws]
+  boards = data[:boards].map { |b| Board.new(b) }
+  wins = []
 
-  nums.each do |num|
-    boards.each { |board| board.mark(num) }
-    boards -= (won_boards += boards.select(&:won?))
-    return won_boards.last.score * num if boards.empty?
+  draws.each do |draw|
+    boards.each { |board| board.mark(draw) }
+    boards -= (wins += boards.select(&:won?))
+    return wins.last.score * draw if boards.empty?
   end
 end
-
-EXAMPLE = parse file "example"
-INPUT = parse file "input"
 
 puts <<~PART1
 ##########
 # Part 1 #
 ##########
-Example: #{part1 EXAMPLE}
-Solution: #{part1 INPUT}
+Example: #{part1 parse file "example"}
+Solution: #{part1 parse file "input"}
 
 PART1
 
@@ -65,7 +69,7 @@ puts <<~PART2
 ##########
 # Part 2 #
 ##########
-Example: #{part2 EXAMPLE}
-Solution: #{part2 INPUT}
+Example: #{part2 parse file "example"}
+Solution: #{part2 parse file "input"}
 
 PART2
