@@ -9,24 +9,76 @@ def parse(data)
   data.split("\n").map do |line|
     line.split(" ").then do |op, ranges|
       x0, x1, y0, y1, z0, z1 = ranges.scan(/(-?\d+)/).flatten.map(&:to_i)
-      [op, (x0..x1), (y0..y1), (z0..z1)]
+      [
+        op == "on",
+        CubeRange.new(x0, x1 + 1),
+        CubeRange.new(y0, y1 + 1),
+        CubeRange.new(z0, z1 + 1)
+      ]
     end
   end
 end
 
 def part1(data)
   result = Set.new
-  data.each do |op, xr, yr, zr|
-    next unless (-50..50).cover? xr
+  mask = CubeRange.new(-50, 51)
+  data.each do |on, xr, yr, zr|
+    next unless mask.cover?(xr)
     coords = xr.to_a.product(yr.to_a).product(zr.to_a).map(&:flatten)
-    case op
-    when "on"
+    if on
       result += coords
     else
       result -= coords
     end
   end
   result.count
+end
+
+class CubeRange
+  attr_reader :min, :max
+
+  def initialize(min, max)
+    @min = min
+    @max = max
+  end
+
+  def to_a
+    (min...max).to_a
+  end
+
+  def size
+    max - min
+  end
+
+  def edges
+    [min, max]
+  end
+
+  def cover?(other)
+    other.max > min && other.min < max
+  end
+
+  def overlaps_fully?(other)
+    min >= other.min && max <= other.max
+  end
+
+  def split!(other)
+    (edges + seams_from(other)).sort.each_cons(2).map do |min, max|
+      self.class.new(min, max)
+    end
+  end
+
+  def seams_from(other)
+    other.edges.select { |edge| min < edge && edge < max }
+  end
+
+  def <=>(other)
+    edges <=> other.edges
+  end
+
+  def to_s
+    "(#{min}..#{max - 1})"
+  end
 end
 
 class Cube
@@ -42,54 +94,50 @@ class Cube
     xr.size * yr.size * zr.size
   end
 
-  def split_ranges(ranges, div, is_min)
-    ranges.flat_map do |range|
-      next range unless range.cover?(div)
-      next range if is_min && range.min == div
-      next range if !is_min && range.max == div
-      return [(div..range.max)] if div == range.min
-
-      [(range.min...div), (div..range.max)]
-    end.compact
+  def ranges
+    [xr, yr, zr]
   end
 
-  def splits_cube?(cube)
-    xr.min <= cube.xr.max &&
-      xr.max >= cube.xr.min &&
-      yr.min <= cube.yr.max &&
-      yr.max >= cube.yr.min &&
-      zr.min <= cube.zr.max &&
-      zr.max >= cube.zr.min
+  def <=>(other)
+    ranges <=> other.ranges
   end
 
-  def split_cube(cube)
-    return [cube] unless splits_cube?(cube)
+  def overlaps_fully?(other)
+    xr.overlaps_fully?(other.xr) &&
+      yr.overlaps_fully?(other.yr) &&
+      zr.overlaps_fully?(other.zr)
+  end
 
-    x_divs = [xr]
-    x_divs = split_ranges(x_divs, cube.xr.min, true)
-    x_divs = split_ranges(x_divs, cube.xr.max, false)
+  def split!(other)
+    return [self] unless split_by?(other)
 
-    y_divs = [yr]
-    y_divs = split_ranges(y_divs, cube.yr.min, true)
-    y_divs = split_ranges(y_divs, cube.yr.max, false)
+    (xr.split!(other.xr)).map do |new_xr|
+      (yr.split!(other.yr)).map do |new_yr|
+        (zr.split!(other.zr)).map do |new_zr|
+          next if (new_cube = self.class.new(new_xr, new_yr, new_zr)).overlaps_fully?(other)
+          new_cube
+        end.compact
+      end
+    end.flatten
+  end
 
-    z_divs = [zr]
-    z_divs = split_ranges(z_divs, cube.zr.min, true)
-    z_divs = split_ranges(z_divs, cube.zr.max, false)
-
-    x_divs.product(y_divs).product(z_divs).map(&:flatten).map do |new_xr, new_yr, new_zr|
-      Cube.new(new_xr, new_yr, new_zr) unless cube.xr.cover?(new_xr) && cube.yr.cover?(new_yr) && cube.zr.cover?(new_zr)
-    end.compact
+  def split_by?(other)
+    ranges.zip(other.ranges).all? do |range, other_range|
+      other_range.cover?(range)
+    end
   end
 end
 
 def part2(data)
   cubes = []
-  data.each do |op, xr, yr, zr|
-    puts "#{op} #{xr} #{yr} #{zr} (#{cubes.count})"
+  data.each do |on, xr, yr, zr|
     new_cube = Cube.new(xr, yr, zr)
-    cubes += cubes.map { |cube| cube.split_cube(new_cube) }.flatten
-    cubes << new_cube if op == "on"
+    new_cubes = []
+    cubes.each do |cube|
+      new_cubes += cube.split!(new_cube)
+    end
+    new_cubes << new_cube if on
+    cubes = new_cubes
   end
   cubes.map(&:size).sum
 end
@@ -110,4 +158,4 @@ puts <<~END
 ##########
 END
 puts "Example: #{part2 parse file "example"}"
-# puts "Solution: #{part2 parse file "input"}"
+puts "Solution: #{part2 parse file "input"}"
