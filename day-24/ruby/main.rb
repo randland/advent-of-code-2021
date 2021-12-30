@@ -37,24 +37,23 @@ class ModelNumSolver
     @program = program
   end
 
-  def inst
-    return @inst if defined? @inst
-
-    chunks = program.chunk.with_index { |_, i| i / 18 }.map(&:last)
-
-    @inst = chunks.map do |c|
-              push = c[4][2] == "1"
-              [push, c[push ? 15 : 5][2].to_i]
-            end
+  def max_num
+    constraints.flat_map(&:max_vals).sort_by(&:first).map(&:last).join
   end
+
+  def min_num
+    constraints.flat_map(&:min_vals).sort_by(&:first).map(&:last).join
+  end
+
+  private
 
   def constraints
     return @constraints if defined? @constraints
 
     @constraints = []
     queue = []
-    inst.each.with_index do |(push, val), idx|
-      next queue.push([idx, val]) if push
+    instructions.each.with_index do |(do_push, val), idx|
+      next queue.push([idx, val]) if do_push
 
       a_idx, a_val = queue.pop
       @constraints << SolverConstraint.new(a_idx, idx, val + a_val)
@@ -63,12 +62,19 @@ class ModelNumSolver
     @constraints
   end
 
-  def max_num
-    constraints.flat_map(&:max_vals).sort_by(&:first).map(&:last).join
+  def instructions
+    @instructions ||= program.chunk.with_index { |_, i| i / 18 }.
+                      map(&:last).
+                      map(&method(:chunk_instruction))
   end
 
-  def min_num
-    constraints.flat_map(&:min_vals).sort_by(&:first).map(&:last).join
+  def chunk_instruction(chunk)
+    case chunk[4][2]
+    when "1"  # Push onto polynomial
+      [true, chunk[15][2].to_i]
+    else      # Pop from polynomial
+      [false, chunk[5][2].to_i]
+    end
   end
 end
 
